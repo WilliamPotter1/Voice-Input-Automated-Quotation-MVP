@@ -30,7 +30,7 @@ export async function transcribeAudio(
   form.append('file', file);
   const url = new URL(apiUrl('/transcribe'));
   if (options?.language) url.searchParams.set('language', options.language);
-  const res = await fetch(url.toString(), { method: 'POST', body: form });
+  const res = await fetchApi(url.toString(), { method: 'POST', body: form });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error ?? 'Transcription failed');
@@ -42,7 +42,7 @@ export async function extractQuoteItems(
   text: string,
   options?: { language?: string }
 ): Promise<{ items: QuoteItemInput[] }> {
-  const res = await fetch(apiUrl('/extract-quote-items'), {
+  const res = await fetchApi(apiUrl('/extract-quote-items'), {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ text, language: options?.language }),
@@ -85,8 +85,25 @@ export interface QuoteDetail extends QuoteSummary {
   items: (QuoteItemInput & { id: string; total: number })[];
 }
 
+async function fetchApi(
+  url: string,
+  options: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(url, options);
+  } catch (err) {
+    const message =
+      err instanceof TypeError && err.message === 'Failed to fetch'
+        ? 'Cannot reach server. Check that the backend URL is correct and CORS allows this origin.'
+        : err instanceof Error
+          ? err.message
+          : 'Network error';
+    throw new Error(message);
+  }
+}
+
 export async function login(email: string, password: string): Promise<{ user: User; token: string }> {
-  const res = await fetch(apiUrl('/auth/login'), {
+  const res = await fetchApi(apiUrl('/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -100,7 +117,7 @@ export async function register(
   email: string,
   password: string
 ): Promise<{ user: User; token: string }> {
-  const res = await fetch(apiUrl('/auth/register'), {
+  const res = await fetchApi(apiUrl('/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -111,7 +128,7 @@ export async function register(
 }
 
 export async function createQuote(payload: QuotePayload): Promise<QuoteDetail> {
-  const res = await fetch(apiUrl('/quotes'), {
+  const res = await fetchApi(apiUrl('/quotes'), {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -122,7 +139,7 @@ export async function createQuote(payload: QuotePayload): Promise<QuoteDetail> {
 }
 
 export async function listQuotes(): Promise<QuoteSummary[]> {
-  const res = await fetch(apiUrl('/quotes'), { headers: getAuthHeaders() });
+  const res = await fetchApi(apiUrl('/quotes'), { headers: getAuthHeaders() });
   if (!res.ok) {
     if (res.status === 401) throw new Error('Unauthorized');
     throw new Error('Failed to load quotes');
@@ -131,7 +148,7 @@ export async function listQuotes(): Promise<QuoteSummary[]> {
 }
 
 export async function getQuote(id: string): Promise<QuoteDetail> {
-  const res = await fetch(apiUrl(`/quotes/${id}`), { headers: getAuthHeaders() });
+  const res = await fetchApi(apiUrl(`/quotes/${id}`), { headers: getAuthHeaders() });
   if (!res.ok) {
     if (res.status === 404) throw new Error('Quote not found');
     if (res.status === 401) throw new Error('Unauthorized');
@@ -141,7 +158,7 @@ export async function getQuote(id: string): Promise<QuoteDetail> {
 }
 
 export async function updateQuote(id: string, payload: Partial<QuotePayload>): Promise<QuoteDetail> {
-  const res = await fetch(apiUrl(`/quotes/${id}`), {
+  const res = await fetchApi(apiUrl(`/quotes/${id}`), {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -152,7 +169,7 @@ export async function updateQuote(id: string, payload: Partial<QuotePayload>): P
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-  const res = await fetch(apiUrl(`/quotes/${id}`), {
+  const res = await fetchApi(apiUrl(`/quotes/${id}`), {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });

@@ -23,6 +23,8 @@ async function main() {
   await app.register(cors, {
     origin: getCorsOrigin(),
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   await app.register(jwt, { secret });
   await app.register(authPlugin);
