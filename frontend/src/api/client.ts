@@ -1,6 +1,9 @@
 import { useAuthStore } from '../stores/authStore';
 
-const API_BASE = '/api';
+const API_BASE =
+  import.meta.env.VITE_API_URL != null && import.meta.env.VITE_API_URL !== ''
+    ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+    : '/api';
 
 function getAuthHeaders(): HeadersInit {
   const token = useAuthStore.getState().token;
@@ -14,13 +17,18 @@ export interface User {
   email: string;
 }
 
+function apiUrl(path: string): string {
+  const full = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+  return full.startsWith('http') ? full : new URL(full, window.location.origin).href;
+}
+
 export async function transcribeAudio(
   file: File,
   options?: { language?: string }
 ): Promise<{ text: string; language?: string }> {
   const form = new FormData();
   form.append('file', file);
-  const url = new URL(`${API_BASE}/transcribe`, window.location.origin);
+  const url = new URL(apiUrl('/transcribe'));
   if (options?.language) url.searchParams.set('language', options.language);
   const res = await fetch(url.toString(), { method: 'POST', body: form });
   if (!res.ok) {
@@ -34,7 +42,7 @@ export async function extractQuoteItems(
   text: string,
   options?: { language?: string }
 ): Promise<{ items: QuoteItemInput[] }> {
-  const res = await fetch(`${API_BASE}/extract-quote-items`, {
+  const res = await fetch(apiUrl('/extract-quote-items'), {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ text, language: options?.language }),
@@ -78,7 +86,7 @@ export interface QuoteDetail extends QuoteSummary {
 }
 
 export async function login(email: string, password: string): Promise<{ user: User; token: string }> {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+  const res = await fetch(apiUrl('/auth/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -92,7 +100,7 @@ export async function register(
   email: string,
   password: string
 ): Promise<{ user: User; token: string }> {
-  const res = await fetch(`${API_BASE}/auth/register`, {
+  const res = await fetch(apiUrl('/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -103,7 +111,7 @@ export async function register(
 }
 
 export async function createQuote(payload: QuotePayload): Promise<QuoteDetail> {
-  const res = await fetch(`${API_BASE}/quotes`, {
+  const res = await fetch(apiUrl('/quotes'), {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -114,7 +122,7 @@ export async function createQuote(payload: QuotePayload): Promise<QuoteDetail> {
 }
 
 export async function listQuotes(): Promise<QuoteSummary[]> {
-  const res = await fetch(`${API_BASE}/quotes`, { headers: getAuthHeaders() });
+  const res = await fetch(apiUrl('/quotes'), { headers: getAuthHeaders() });
   if (!res.ok) {
     if (res.status === 401) throw new Error('Unauthorized');
     throw new Error('Failed to load quotes');
@@ -123,7 +131,7 @@ export async function listQuotes(): Promise<QuoteSummary[]> {
 }
 
 export async function getQuote(id: string): Promise<QuoteDetail> {
-  const res = await fetch(`${API_BASE}/quotes/${id}`, { headers: getAuthHeaders() });
+  const res = await fetch(apiUrl(`/quotes/${id}`), { headers: getAuthHeaders() });
   if (!res.ok) {
     if (res.status === 404) throw new Error('Quote not found');
     if (res.status === 401) throw new Error('Unauthorized');
@@ -133,7 +141,7 @@ export async function getQuote(id: string): Promise<QuoteDetail> {
 }
 
 export async function updateQuote(id: string, payload: Partial<QuotePayload>): Promise<QuoteDetail> {
-  const res = await fetch(`${API_BASE}/quotes/${id}`, {
+  const res = await fetch(apiUrl(`/quotes/${id}`), {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -144,7 +152,7 @@ export async function updateQuote(id: string, payload: Partial<QuotePayload>): P
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/quotes/${id}`, {
+  const res = await fetch(apiUrl(`/quotes/${id}`), {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });

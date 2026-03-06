@@ -61,12 +61,20 @@ npm run build        # both
 
 ## Environment
 
+**Backend** (`.env` in `backend/`)
+
 | Variable        | Description                    |
 |----------------|---------------------------------|
 | `PORT`         | Backend port (default 3001)     |
 | `DATABASE_URL` | MongoDB connection string       |
 | `OPENAI_API_KEY` | OpenAI API key (Whisper + GPT) |
 | `JWT_SECRET`   | Secret for JWT (strong value in prod) |
+
+**Frontend** (optional `.env` in `frontend/`)
+
+| Variable        | Description                    |
+|----------------|---------------------------------|
+| `VITE_API_URL` | Deployed backend URL (no trailing slash). Leave empty in dev (uses proxy). Set in production so the app calls your deployed API, e.g. `https://your-backend.vercel.app`. |
 
 ## Project layout
 
