@@ -32,6 +32,14 @@ async function main() {
     limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
   });
 
+  app.get('/', async (_request, reply) => {
+    return reply.send({
+      name: 'Voice Quote API',
+      version: '1.0',
+      docs: 'API is under /api. Try GET /api/health',
+    });
+  });
+
   await app.register(healthRoutes, { prefix: '/api' });
   await app.register(authRoutes, { prefix: '/api' });
   await app.register(speechToTextRoutes, { prefix: '/api' });

@@ -92,12 +92,15 @@ async function fetchApi(
   try {
     return await fetch(url, options);
   } catch (err) {
-    const message =
-      err instanceof TypeError && err.message === 'Failed to fetch'
-        ? 'Cannot reach server. Check that the backend URL is correct and CORS allows this origin.'
-        : err instanceof Error
-          ? err.message
-          : 'Network error';
+    const isFailedFetch = err instanceof TypeError && err.message === 'Failed to fetch';
+    const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+    const message = isFailedFetch
+      ? isProduction
+        ? 'Cannot reach server. Set VITE_API_URL in the frontend build and CORS_ORIGIN in the backend, then redeploy both.'
+        : 'Cannot reach server. Check backend URL (VITE_API_URL) and CORS.'
+      : err instanceof Error
+        ? err.message
+        : 'Network error';
     throw new Error(message);
   }
 }
