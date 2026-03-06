@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { OpenAI } from 'openai';
 import type { QuoteItemInput } from '../schemas/quotes.js';
 
 const openai = new OpenAI({
