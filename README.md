@@ -76,6 +76,19 @@ npm run build        # both
 |----------------|---------------------------------|
 | `VITE_API_URL` | Deployed backend URL (no trailing slash). Leave empty in dev (uses proxy). Set in production so the app calls your deployed API, e.g. `https://your-backend.vercel.app`. |
 
+### Deploying backend to Vercel (fixing login 500)
+
+If the frontend gets "internal server error" on login, the backend is returning 500. Set these in the **backend** project on Vercel (Settings → Environment Variables):
+
+- **DATABASE_URL** – Your MongoDB connection string (e.g. Atlas). Required.
+- **JWT_SECRET** – A long random string. Required for auth.
+- **OPENAI_API_KEY** – For Whisper and quote extraction.
+- **CORS_ORIGIN** (optional) – Your frontend URL, e.g. `https://your-frontend.vercel.app`. If empty, all origins are allowed.
+
+If using **MongoDB Atlas**: in Atlas → Network Access, add **0.0.0.0/0** (Allow access from anywhere) so Vercel’s serverless functions can connect. You can restrict to Vercel IPs later if needed.
+
+After changing env vars, redeploy the backend. Check the backend’s **Vercel → Deployments → Function logs** for the real error if it still fails.
+
 ## Project layout
 
 ```

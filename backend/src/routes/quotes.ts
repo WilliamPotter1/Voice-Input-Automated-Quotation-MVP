@@ -100,7 +100,7 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
         vat: quote.vat,
         total: quote.total,
         createdAt: quote.createdAt.toISOString(),
-        items: quote.items.map((i) => ({
+        items: quote.items.map((i: { id: string; itemName: string; quantity: number; price: number; total: number }) => ({
           id: i.id,
           itemName: i.itemName,
           quantity: i.quantity,
@@ -147,7 +147,7 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
           createdAt: true,
         },
       });
-      return quotes.map((q) => ({
+      return quotes.map((q: { id: string; clientName: string | null; subtotal: number; vat: number; total: number; createdAt: Date }) => ({
         id: q.id,
         clientName: q.clientName,
         subtotal: q.subtotal,
@@ -209,7 +209,7 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
         vat: quote.vat,
         total: quote.total,
         createdAt: quote.createdAt.toISOString(),
-        items: quote.items.map((i) => ({
+        items: quote.items.map((i: { id: string; itemName: string; quantity: number; price: number; total: number }) => ({
           id: i.id,
           itemName: i.itemName,
           quantity: i.quantity,
@@ -264,12 +264,12 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
 
       const { clientName, vatRate, items: itemsInput } = parsed.data;
       const vatRateNum = vatRate ?? existing.vatRate;
-      const itemsToUse = itemsInput ?? existing.items.map((i) => ({
+      const itemsToUse = itemsInput ?? existing.items.map((i: { itemName: string; quantity: number; price: number }) => ({
         itemName: i.itemName,
         quantity: i.quantity,
         unitPrice: i.price,
       }));
-      const subtotal = itemsToUse.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
+      const subtotal = itemsToUse.reduce((s: number, it: { quantity: number; unitPrice: number }) => s + it.quantity * it.unitPrice, 0);
       const vatAmount = subtotal * vatRateNum;
       const total = subtotal + vatAmount;
 
@@ -283,7 +283,7 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
           vat: vatAmount,
           total,
           items: {
-            create: itemsToUse.map((it) => ({
+            create: itemsToUse.map((it: { itemName: string; quantity: number; unitPrice: number }) => ({
               itemName: it.itemName,
               quantity: it.quantity,
               price: it.unitPrice,
@@ -302,7 +302,7 @@ export async function quotesRoutes(app: FastifyInstance, _opts: FastifyPluginOpt
         vat: quote.vat,
         total: quote.total,
         createdAt: quote.createdAt.toISOString(),
-        items: quote.items.map((i) => ({
+        items: quote.items.map((i: { id: string; itemName: string; quantity: number; price: number; total: number }) => ({
           id: i.id,
           itemName: i.itemName,
           quantity: i.quantity,

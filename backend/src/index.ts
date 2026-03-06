@@ -12,9 +12,18 @@ import { authPlugin } from './plugins/auth.js';
 
 const app = Fastify({ logger: true });
 
+function getCorsOrigin(): boolean | string | string[] {
+  const origin = process.env.CORS_ORIGIN;
+  if (!origin) return true;
+  return origin.split(',').map((o) => o.trim()).filter(Boolean);
+}
+
 async function main() {
   const secret = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
-  await app.register(cors, { origin: true });
+  await app.register(cors, {
+    origin: getCorsOrigin(),
+    credentials: true,
+  });
   await app.register(jwt, { secret });
   await app.register(authPlugin);
   await app.register(multipart, {

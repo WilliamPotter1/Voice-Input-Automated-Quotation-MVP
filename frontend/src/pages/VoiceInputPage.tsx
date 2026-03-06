@@ -79,7 +79,7 @@ export function VoiceInputPage() {
       recorder.start();
       setRecording(true);
       toast.success('Recording started');
-    } catch (e) {
+    } catch {
       toast.error('Microphone access denied or not available');
       setRecording(false);
     }
