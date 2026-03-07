@@ -12,9 +12,9 @@ Use **two Vercel projects**: one for the backend, one for the frontend.
    Set to `backend` (if the repo has both `frontend/` and `backend/`).
 
 3. **Build**
-   - **Framework Preset:** **Fastify** (or leave auto-detected; entrypoint is `src/index.ts`).
-   - **Node.js Version:** In **Settings → General → Node.js Version**, choose **20.x** (avoids override warning).
-   - **Build Command:** `npm run build` (or use `vercel.json` default).
+   - **Framework Preset:** **Other** (so Vercel uses the `api/` serverless handler; `vercel.json` sets `framework: null`).
+   - **Node.js Version:** In **Settings → General → Node.js Version**, choose **20.x**.
+   - **Build Command:** `npm run build` (creates `dist/` for the api handler).
    - **Install Command:** `npm install`.
    - **Output Directory:** `.` (set in `vercel.json`).
 
@@ -26,7 +26,7 @@ Use **two Vercel projects**: one for the backend, one for the frontend.
 
 5. **Deploy** and note the backend URL (e.g. `https://your-backend.vercel.app`).
 
-6. **Check:** open `https://your-backend.vercel.app/api/health` — expect `{"status":"ok",...}`.
+6. **Check:** open the backend URL (root) for a short “Voice Quote API” page; open `https://your-backend.vercel.app/api/health` for `{"status":"ok",...}`.
 
 ---
 

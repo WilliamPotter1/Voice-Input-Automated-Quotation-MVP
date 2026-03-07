@@ -15,7 +15,7 @@ function getCorsOrigin(): boolean | string | string[] {
   return origin.split(',').map((o) => o.trim()).filter(Boolean);
 }
 
-/** Build and return the configured Fastify app. Used by src/index.ts (Vercel Fastify entrypoint). */
+/** Build and return the configured Fastify app. Used by api/[[...path]].ts on Vercel and server.ts locally. */
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
   const secret = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
