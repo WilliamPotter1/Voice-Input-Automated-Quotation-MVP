@@ -1,0 +1,14 @@
+import 'dotenv/config';
+import { buildApp } from './build-app.js';
+
+const port = Number(process.env.PORT) || 3001;
+
+buildApp()
+  .then((app) => app.listen({ port, host: '0.0.0.0' }))
+  .then((address) => {
+    console.log(`Backend running at ${address}`);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
