@@ -33,11 +33,16 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   app.get('/', async (_request, reply) => {
-    return reply.send({
-      name: 'Voice Quote API',
-      version: '1.0',
-      docs: 'API is under /api. Try GET /api/health',
-    });
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice Quote API</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem;">
+  <h1>Voice Quote API</h1>
+  <p>Version 1.0. Backend is running.</p>
+  <p><a href="/api/health">Check health: GET /api/health</a></p>
+</body>
+</html>`;
+    return reply.type('text/html').send(html);
   });
 
   await app.register(healthRoutes, { prefix: '/api' });
