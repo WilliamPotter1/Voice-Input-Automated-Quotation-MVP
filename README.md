@@ -39,7 +39,7 @@ npx prisma db push
 npm run dev
 ```
 
-Runs at `http://localhost:3001`. API: health, auth (register/login), transcribe, extract-quote-items, quotes CRUD.
+Runs via `vercel dev` (local). API: health, auth (register/login), transcribe, extract-quote-items, quotes CRUD. For production, deploy to Vercel (see DEPLOYMENT.md).
 
 ### Frontend
 
@@ -55,20 +55,21 @@ Runs at `http://localhost:5173` and proxies `/api` to the backend.
 
 ```bash
 npm install
-npm run dev          # backend + frontend
-npm run build        # both
+cd backend && npm install && cd ../frontend && npm install
+npm run dev          # backend (vercel dev) + frontend (vite)
+npm run build        # backend then frontend
 ```
 
 ## Environment
 
-**Backend** (`.env` in `backend/`)
+**Backend** (`.env` in `backend/`, or Vercel env vars in production)
 
-| Variable        | Description                    |
-|----------------|---------------------------------|
-| `PORT`         | Backend port (default 3001)     |
-| `DATABASE_URL` | MongoDB connection string       |
+| Variable         | Description |
+|------------------|-------------|
+| `DATABASE_URL`   | MongoDB connection string |
 | `OPENAI_API_KEY` | OpenAI API key (Whisper + GPT) |
-| `JWT_SECRET`   | Secret for JWT (strong value in prod) |
+| `JWT_SECRET`     | Secret for JWT (strong value in prod) |
+| `CORS_ORIGIN`    | Frontend origin (optional; empty = allow all) |
 
 **Frontend** (optional `.env` in `frontend/`)
 
@@ -76,27 +77,20 @@ npm run build        # both
 |----------------|---------------------------------|
 | `VITE_API_URL` | Deployed backend URL (no trailing slash). Leave empty in dev (uses proxy). Set in production so the app calls your deployed API, e.g. `https://your-backend.vercel.app`. |
 
-### Deploying backend to Vercel (fixing login 500)
+### Deploying to Vercel
 
-If the frontend gets "internal server error" on login, the backend is returning 500. Set these in the **backend** project on Vercel (Settings → Environment Variables):
-
-- **DATABASE_URL** – Your MongoDB connection string (e.g. Atlas). Required.
-- **JWT_SECRET** – A long random string. Required for auth.
-- **OPENAI_API_KEY** – For Whisper and quote extraction.
-- **CORS_ORIGIN** (optional) – Your frontend URL, e.g. `https://your-frontend.vercel.app`. If empty, all origins are allowed.
-
-If using **MongoDB Atlas**: in Atlas → Network Access, add **0.0.0.0/0** (Allow access from anywhere) so Vercel’s serverless functions can connect. You can restrict to Vercel IPs later if needed.
-
-After changing env vars, redeploy the backend. Check the backend’s **Vercel → Deployments → Function logs** for the real error if it still fails.
+See **DEPLOYMENT.md** for step-by-step backend and frontend deployment. Backend uses Vercel’s Fastify support (`src/index.ts`); set `DATABASE_URL`, `JWT_SECRET`, `OPENAI_API_KEY`, and optionally `CORS_ORIGIN` in the backend project. For MongoDB Atlas, allow access from anywhere (0.0.0.0/0) so Vercel can connect.
 
 ## Project layout
 
 ```
-├── backend/          # Fastify API, Prisma (MongoDB), Whisper, GPT extraction, JWT auth
+├── backend/          # Fastify API (Vercel Fastify entrypoint: src/index.ts)
 │   ├── prisma/
-│   └── src/
+│   ├── src/          # build-app, routes, services, plugins
+│   └── vercel.json
 ├── frontend/         # Vite + React app
 │   └── src/
+├── DEPLOYMENT.md     # Vercel deploy steps
 ├── package.json      # Root scripts (concurrently)
 └── README.md
 ```

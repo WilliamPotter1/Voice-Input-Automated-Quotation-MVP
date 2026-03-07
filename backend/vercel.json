@@ -1,13 +1,6 @@
 {
   "version": 2,
-  "framework": null,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".",
-  "functions": {
-    "api/[[...path]].ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  "outputDirectory": "."
 }

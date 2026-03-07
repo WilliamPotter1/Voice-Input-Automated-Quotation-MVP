@@ -1,63 +1,59 @@
 # Deploying to Vercel (backend + frontend)
 
-Use **two Vercel projects**: one for the backend, one for the frontend. Configure each as below so both run correctly after deploy.
+Use **two Vercel projects**: one for the backend, one for the frontend.
 
 ---
 
 ## Backend project
 
-1. **Create / open the backend project** on Vercel and connect the repo.
+1. **Create or open the backend project** on Vercel and connect the repo.
 
 2. **Root Directory**  
-   - If the repo contains both `frontend/` and `backend/`: set **Root Directory** to `backend`.  
-   - If the repo is backend-only: leave Root Directory empty.
+   Set to `backend` (if the repo has both `frontend/` and `backend/`).
 
-3. **Build & output**
-   - **Framework Preset:** **Other** (do not use “Fastify” or a root server; the `api/` serverless handler must handle all traffic).
-   - **Build Command:** `npm run build` (or leave default; `vercel.json` sets it).
-   - **Install Command:** `npm install` (or leave default).
-   - Do **not** set a Start Command.
+3. **Build**
+   - **Framework Preset:** **Fastify** (or leave auto-detected; entrypoint is `src/index.ts`).
+   - **Build Command:** `npm run build` (or use `vercel.json` default).
+   - **Install Command:** `npm install`.
+   - **Output Directory:** `.` (set in `vercel.json`).
 
 4. **Environment variables** (Settings → Environment Variables):
-   - `CORS_ORIGIN` = your frontend URL, e.g. `https://your-frontend.vercel.app` (no trailing slash).
-   - `JWT_SECRET` = a long random secret (e.g. from `openssl rand -hex 32`).
-   - `DATABASE_URL` = your MongoDB connection string.
-   - `OPENAI_API_KEY` = your OpenAI API key.
+   - `DATABASE_URL` – MongoDB connection string (e.g. Atlas).
+   - `JWT_SECRET` – Long random secret (e.g. `openssl rand -hex 32`).
+   - `OPENAI_API_KEY` – For Whisper and quote extraction.
+   - `CORS_ORIGIN` – Frontend URL, e.g. `https://your-frontend.vercel.app` (no trailing slash). Optional; if empty, all origins allowed.
 
-5. **Deploy.** Note the backend URL (e.g. `https://your-backend.vercel.app`).
+5. **Deploy** and note the backend URL (e.g. `https://your-backend.vercel.app`).
 
-6. **Check:** open `https://your-backend.vercel.app/api/health` — you should see `{"status":"ok",...}`.
+6. **Check:** open `https://your-backend.vercel.app/api/health` — expect `{"status":"ok",...}`.
 
 ---
 
 ## Frontend project
 
-1. **Create / open the frontend project** on Vercel and connect the same repo.
+1. **Create or open the frontend project** on Vercel and connect the same repo.
 
 2. **Root Directory**  
-   - If the repo contains both `frontend/` and `backend/`: set **Root Directory** to `frontend`.  
-   - If the repo is frontend-only: leave Root Directory empty.
+   Set to `frontend`.
 
-3. **Build & output**
-   - **Framework Preset:** **Vite** (or **Other**; `frontend/vercel.json` sets build and SPA rewrites).
-   - **Build Command:** `npm run build` (or leave default).
-   - **Output Directory:** `dist` (or leave default; `vercel.json` sets it).
+3. **Build**
+   - **Framework Preset:** **Vite** (or **Other**; `vercel.json` sets build and SPA rewrites).
+   - **Build Command:** `npm run build`.
+   - **Output Directory:** `dist`.
 
-4. **Environment variables** (Settings → Environment Variables):
-   - `VITE_API_URL` = your **backend** URL, e.g. `https://your-backend.vercel.app` (no trailing slash).  
-   - This is baked in at **build time**; change it only in the dashboard and then **redeploy**.
+4. **Environment variables**
+   - `VITE_API_URL` – Backend URL, e.g. `https://your-backend.vercel.app` (no trailing slash).  
+   Set at build time; redeploy after changing.
 
-5. **Deploy.** Note the frontend URL (e.g. `https://your-frontend.vercel.app`).
+5. **Deploy** and note the frontend URL.
 
-6. **CORS:** In the **backend** project, set `CORS_ORIGIN` to this frontend URL and redeploy the backend if you didn’t already.
+6. **CORS:** In the **backend** project, set `CORS_ORIGIN` to this frontend URL and redeploy the backend if needed.
 
 ---
 
 ## After deploy
 
-- **Frontend:** open the frontend URL; you should see the app. Login/register and API calls go to the backend URL.
+- **Frontend:** Open the frontend URL; login and API calls use the backend URL.
 - **Backend:** `GET https://your-backend.vercel.app/api/health` should return OK.
 
-If login returns **"Route POST:/ not found"**, the backend is not using the `api/` serverless handler: set **Framework Preset** to **Other** and ensure **Root Directory** is `backend`, then redeploy.
-
-If you see **"Cannot reach server"**, set `VITE_API_URL` on the frontend and `CORS_ORIGIN` on the backend, then redeploy both.
+**If you see "Cannot reach server"** – set `VITE_API_URL` on the frontend and `CORS_ORIGIN` on the backend, then redeploy both.
