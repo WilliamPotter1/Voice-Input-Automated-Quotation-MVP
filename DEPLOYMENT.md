@@ -1,64 +1,63 @@
-# Deploying on Vercel
+# Deploying to Vercel (backend + frontend)
 
-## Fixing "Route POST:/ not found" (backend path on Vercel)
-
-If login or other API calls return `{"message":"Route POST:/ not found",...}`, the backend is receiving path `/` instead of e.g. `/api/auth/login`. The repo fixes this with a **Vercel serverless catch-all**:
-
-- **Backend** has `api/[[...path]].ts`, which handles every `/api/*` request and forwards it to the Fastify app with the **correct path** via `inject()`.
-- Ensure the **backend** project on Vercel uses this setup:
-  - **Root Directory:** `backend` (if the repo is a monorepo).
-  - **Framework Preset:** **Other** (so Vercel does not run the root Fastify server; only the `api/` serverless functions run).
-  - **Build Command:** `npm run build` (creates `dist/app.js` for the handler).
-  - **Install Command:** `npm install`.
-
-After redeploying the backend, `POST /api/auth/login` and all other `/api/*` routes should work.
+Use **two Vercel projects**: one for the backend, one for the frontend. Configure each as below so both run correctly after deploy.
 
 ---
 
-## Fixing "Cannot reach server" (Vercel)
+## Backend project
 
-This error means the browser could not get a response from the backend (wrong URL or CORS). Do **both** steps below.
+1. **Create / open the backend project** on Vercel and connect the repo.
 
----
+2. **Root Directory**  
+   - If the repo contains both `frontend/` and `backend/`: set **Root Directory** to `backend`.  
+   - If the repo is backend-only: leave Root Directory empty.
 
-## 1. Frontend: set backend URL at build time
+3. **Build & output**
+   - **Framework Preset:** **Other** (do not use “Fastify” or a root server; the `api/` serverless handler must handle all traffic).
+   - **Build Command:** `npm run build` (or leave default; `vercel.json` sets it).
+   - **Install Command:** `npm install` (or leave default).
+   - Do **not** set a Start Command.
 
-The frontend must know the backend URL **when it is built**. On Vercel, that means an environment variable.
+4. **Environment variables** (Settings → Environment Variables):
+   - `CORS_ORIGIN` = your frontend URL, e.g. `https://your-frontend.vercel.app` (no trailing slash).
+   - `JWT_SECRET` = a long random secret (e.g. from `openssl rand -hex 32`).
+   - `DATABASE_URL` = your MongoDB connection string.
+   - `OPENAI_API_KEY` = your OpenAI API key.
 
-1. Open **Vercel** → your **frontend** project (not the backend).
-2. Go to **Settings** → **Environment Variables**.
-3. Add:
-   - **Name:** `VITE_API_URL`
-   - **Value:** `https://voice-input-automated-quotation-mvp-vert.vercel.app`  
-     (no trailing slash; use your real backend URL if different)
-   - **Environment:** tick Production (and Preview if you use preview deploys).
-4. **Redeploy** the frontend (Deployments → ⋮ → Redeploy).  
-   Without a new deploy, the build won’t see the variable and will still use `/api` (same origin).
+5. **Deploy.** Note the backend URL (e.g. `https://your-backend.vercel.app`).
 
----
-
-## 2. Backend: allow the frontend origin (CORS)
-
-The backend must allow requests from the frontend’s domain.
-
-1. Open **Vercel** → your **backend** project.
-2. Go to **Settings** → **Environment Variables**.
-3. Add:
-   - **Name:** `CORS_ORIGIN`
-   - **Value:** your frontend URL, e.g. `https://your-frontend.vercel.app`  
-     (no trailing slash; the URL you use to open the app in the browser)
-   - **Environment:** Production (and Preview if needed).
-4. **Redeploy** the backend.
+6. **Check:** open `https://your-backend.vercel.app/api/health` — you should see `{"status":"ok",...}`.
 
 ---
 
-## 3. Check the backend
+## Frontend project
 
-In a browser tab, open:
+1. **Create / open the frontend project** on Vercel and connect the same repo.
 
-`https://voice-input-automated-quotation-mvp-vert.vercel.app/api/health`
+2. **Root Directory**  
+   - If the repo contains both `frontend/` and `backend/`: set **Root Directory** to `frontend`.  
+   - If the repo is frontend-only: leave Root Directory empty.
 
-You should see something like: `{"status":"ok","timestamp":"..."}`.
+3. **Build & output**
+   - **Framework Preset:** **Vite** (or **Other**; `frontend/vercel.json` sets build and SPA rewrites).
+   - **Build Command:** `npm run build` (or leave default).
+   - **Output Directory:** `dist` (or leave default; `vercel.json` sets it).
 
-- If that **fails** or times out, the backend isn’t reachable (deploy or URL problem).
-- If it **works**, the backend is up; then the issue was frontend URL (step 1) or CORS (step 2). After fixing both and redeploying, try signing in again.
+4. **Environment variables** (Settings → Environment Variables):
+   - `VITE_API_URL` = your **backend** URL, e.g. `https://your-backend.vercel.app` (no trailing slash).  
+   - This is baked in at **build time**; change it only in the dashboard and then **redeploy**.
+
+5. **Deploy.** Note the frontend URL (e.g. `https://your-frontend.vercel.app`).
+
+6. **CORS:** In the **backend** project, set `CORS_ORIGIN` to this frontend URL and redeploy the backend if you didn’t already.
+
+---
+
+## After deploy
+
+- **Frontend:** open the frontend URL; you should see the app. Login/register and API calls go to the backend URL.
+- **Backend:** `GET https://your-backend.vercel.app/api/health` should return OK.
+
+If login returns **"Route POST:/ not found"**, the backend is not using the `api/` serverless handler: set **Framework Preset** to **Other** and ensure **Root Directory** is `backend`, then redeploy.
+
+If you see **"Cannot reach server"**, set `VITE_API_URL` on the frontend and `CORS_ORIGIN` on the backend, then redeploy both.
