@@ -4,6 +4,7 @@
  */
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const HTTP_METHODS = ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'HEAD', 'OPTIONS'] as const;
@@ -12,7 +13,8 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 let appPromise: Promise<unknown> | null = null;
 
 async function getAppModule() {
-  const distPath = path.join(process.cwd(), 'dist', 'build-app.js');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const distPath = path.join(__dirname, '..', 'dist', 'build-app.js');
   const appUrl = pathToFileURL(distPath).href;
   return import(appUrl);
 }
@@ -48,15 +50,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const pathSegments = (req.query.path as string[] | undefined);
     const pathStr = pathSegments && pathSegments.length ? '/' + pathSegments.join('/') : '';
     const rawUrl = typeof req.url === 'string' ? req.url : '';
-    // When root is rewritten to /api, path is [] and rawUrl is /api → serve Fastify root /
-    const url =
-      rawUrl && rawUrl !== '/' && rawUrl !== '/api'
-        ? rawUrl
-        : pathSegments && pathSegments.length === 1 && pathSegments[0] === ''
-          ? '/'
-          : !pathStr && (rawUrl === '/api' || rawUrl === '/')
-            ? '/'
-            : '/api' + pathStr;
+    // Build URL for Fastify: prefer pathSegments so /api/auth/login always works even if req.url is wrong
+    let url: string;
+    if (pathSegments && pathSegments.length > 0) {
+      url = '/api' + pathStr;
+      const q = rawUrl.includes('?') ? rawUrl.slice(rawUrl.indexOf('?')) : '';
+      if (q) url += q;
+    } else if (rawUrl === '/' || rawUrl === '/api' || rawUrl === '/api/' || !rawUrl) {
+      url = '/';
+    } else {
+      url = rawUrl;
+    }
     const app = (await getApp()) as FastifyInject;
     const body = await readBody(req);
     const headers: Record<string, string> = {};

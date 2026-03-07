@@ -5,7 +5,9 @@
   "installCommand": "npm install --loglevel=error",
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/", "destination": "/api" }
+    { "source": "/", "destination": "/api" },
+    { "source": "/api", "destination": "/api" },
+    { "source": "/api/:path*", "destination": "/api/:path*" }
   ],
   "functions": {
     "api/[[...path]].ts": {
