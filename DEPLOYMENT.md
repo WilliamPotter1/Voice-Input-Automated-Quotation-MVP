@@ -13,6 +13,7 @@ Use **two Vercel projects**: one for the backend, one for the frontend.
 
 3. **Build**
    - **Framework Preset:** **Fastify** (or leave auto-detected; entrypoint is `src/index.ts`).
+   - **Node.js Version:** In **Settings → General → Node.js Version**, choose **20.x** (avoids override warning).
    - **Build Command:** `npm run build` (or use `vercel.json` default).
    - **Install Command:** `npm install`.
    - **Output Directory:** `.` (set in `vercel.json`).
