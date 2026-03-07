@@ -52,12 +52,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const response = await app.inject({
+    const injectOpts: Record<string, unknown> = {
       method,
       url,
       headers,
-      ...(req.body !== undefined && req.body !== null ? { payload: JSON.stringify(req.body) } : {}),
-    });
+    };
+    if (req.body !== undefined && req.body !== null) {
+      injectOpts.payload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    }
+
+    console.log('[handler] injecting:', { method, url, hasBody: req.body !== undefined && req.body !== null });
+
+    const response = await app.inject(injectOpts);
+
+    console.log('[handler] fastify responded:', response.statusCode, url);
+
+    if (response.statusCode === 404) {
+      const routes = app.printRoutes();
+      console.log('[handler] registered routes:\n' + routes);
+    }
 
     res.status(response.statusCode);
     for (const [k, v] of Object.entries(response.headers)) {
