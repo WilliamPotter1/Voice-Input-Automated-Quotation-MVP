@@ -9,19 +9,13 @@ import { extractQuoteItemsRoutes } from './routes/extract-quote-items.js';
 import { quotesRoutes } from './routes/quotes.js';
 import { authPlugin } from './plugins/auth.js';
 
-function getCorsOrigin(): boolean | string | string[] {
-  const origin = process.env.CORS_ORIGIN;
-  if (!origin) return true;
-  return origin.split(',').map((o) => o.trim()).filter(Boolean);
-}
-
 /** Build and return the configured Fastify app. Used by api/[[...path]].ts on Vercel and server.ts locally. */
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
   const secret = process.env.JWT_SECRET ?? 'dev-secret-change-in-production';
 
   await app.register(cors, {
-    origin: getCorsOrigin(),
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
