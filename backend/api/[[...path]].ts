@@ -12,7 +12,7 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 let appPromise: Promise<unknown> | null = null;
 
 async function getAppModule() {
-  const distPath = path.join(process.cwd(), 'dist', 'app.js');
+  const distPath = path.join(process.cwd(), 'dist', 'build-app.js');
   const appUrl = pathToFileURL(distPath).href;
   return import(appUrl);
 }
