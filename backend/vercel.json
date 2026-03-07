@@ -12,8 +12,7 @@
   "functions": {
     "api/[[...path]].ts": {
       "memory": 1024,
-      "maxDuration": 10,
-      "includeFiles": "{dist/**,backend/dist/**}"
+      "maxDuration": 10
     }
   }
 }
