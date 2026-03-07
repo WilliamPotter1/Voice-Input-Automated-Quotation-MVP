@@ -4,7 +4,6 @@
  */
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { fileURLToPath } from 'node:url';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const HTTP_METHODS = ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'HEAD', 'OPTIONS'] as const;
@@ -13,8 +12,8 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 let appPromise: Promise<unknown> | null = null;
 
 async function getAppModule() {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const distPath = path.join(__dirname, '..', 'dist', 'build-app.js');
+  // On Vercel, process.cwd() is the project root (backend); dist is built there. __dirname points into the function bundle.
+  const distPath = path.join(process.cwd(), 'dist', 'build-app.js');
   const appUrl = pathToFileURL(distPath).href;
   return import(appUrl);
 }
@@ -47,7 +46,12 @@ interface FastifyInject {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const pathSegments = (req.query.path as string[] | undefined);
+    const rawPath = req.query.path;
+    const pathSegments = Array.isArray(rawPath)
+      ? rawPath
+      : typeof rawPath === 'string' && rawPath
+        ? rawPath.split('/').filter(Boolean)
+        : undefined;
     const pathStr = pathSegments && pathSegments.length ? '/' + pathSegments.join('/') : '';
     const rawUrl = typeof req.url === 'string' ? req.url : '';
     // Build URL for Fastify: prefer pathSegments so /api/auth/login always works even if req.url is wrong
