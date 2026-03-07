@@ -5,6 +5,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildApp } from '../dist/app.js';
 
+const HTTP_METHODS = ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'HEAD', 'OPTIONS'] as const;
+type HttpMethod = (typeof HTTP_METHODS)[number];
+
 let appPromise: ReturnType<typeof buildApp> | null = null;
 
 function getApp() {
@@ -19,6 +22,12 @@ function readBody(req: VercelRequest): Promise<Buffer | undefined> {
     req.on('end', () => resolve(chunks.length ? Buffer.concat(chunks) : undefined));
     req.on('error', reject);
   });
+}
+
+interface InjectedResponse {
+  statusCode: number;
+  headers: Record<string, string | string[] | undefined>;
+  payload: string;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -42,12 +51,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
-    const response = await app.inject({
-      method: req.method ?? 'GET',
+    const method: HttpMethod =
+      req.method && HTTP_METHODS.includes(req.method as HttpMethod) ? (req.method as HttpMethod) : 'GET';
+    const response = (await app.inject({
+      method,
       url,
       headers,
       payload: body,
-    });
+    })) as unknown as InjectedResponse;
     res.status(response.statusCode);
     for (const [k, v] of Object.entries(response.headers)) {
       if (v !== undefined) res.setHeader(k, v);
