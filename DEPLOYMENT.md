@@ -1,4 +1,21 @@
-# Fixing "Cannot reach server" (Vercel)
+# Deploying on Vercel
+
+## Fixing "Route POST:/ not found" (backend path on Vercel)
+
+If login or other API calls return `{"message":"Route POST:/ not found",...}`, the backend is receiving path `/` instead of e.g. `/api/auth/login`. The repo fixes this with a **Vercel serverless catch-all**:
+
+- **Backend** has `api/[[...path]].ts`, which handles every `/api/*` request and forwards it to the Fastify app with the **correct path** via `inject()`.
+- Ensure the **backend** project on Vercel uses this setup:
+  - **Root Directory:** `backend` (if the repo is a monorepo).
+  - **Framework Preset:** **Other** (so Vercel does not run the root Fastify server; only the `api/` serverless functions run).
+  - **Build Command:** `npm run build` (creates `dist/app.js` for the handler).
+  - **Install Command:** `npm install`.
+
+After redeploying the backend, `POST /api/auth/login` and all other `/api/*` routes should work.
+
+---
+
+## Fixing "Cannot reach server" (Vercel)
 
 This error means the browser could not get a response from the backend (wrong URL or CORS). Do **both** steps below.
 
