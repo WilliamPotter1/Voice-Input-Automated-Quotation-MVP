@@ -2,7 +2,9 @@
  * Vercel serverless catch-all: forwards all requests to Fastify with the correct path.
  * Ensures / and /api/* work when the backend is deployed on Vercel.
  */
+import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pathToFileURL } from 'node:url';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
@@ -11,9 +13,32 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 
 let appPromise: Promise<unknown> | null = null;
 
+function findDistFile(): string {
+  const candidates: string[] = [];
+
+  // 1. Relative to this handler file (ESM: import.meta.url)
+  try {
+    const handlerDir = path.dirname(fileURLToPath(import.meta.url));
+    candidates.push(path.join(handlerDir, '..', 'dist', 'build-app.js'));
+  } catch { /* import.meta.url not available (CJS) */ }
+
+  // 2. process.cwd() + dist (Root Directory = backend)
+  candidates.push(path.join(process.cwd(), 'dist', 'build-app.js'));
+
+  // 3. process.cwd() + backend/dist (Root Directory = repo root)
+  candidates.push(path.join(process.cwd(), 'backend', 'dist', 'build-app.js'));
+
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+
+  throw new Error(
+    `build-app.js not found. Tried:\n${candidates.map(c => `  - ${c} (exists: ${fs.existsSync(c)})`).join('\n')}\ncwd: ${process.cwd()}`
+  );
+}
+
 async function getAppModule() {
-  // On Vercel, process.cwd() is the project root (backend); dist is built there. __dirname points into the function bundle.
-  const distPath = path.join(process.cwd(), 'dist', 'build-app.js');
+  const distPath = findDistFile();
   const appUrl = pathToFileURL(distPath).href;
   return import(appUrl);
 }
