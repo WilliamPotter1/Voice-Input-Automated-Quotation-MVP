@@ -1,8 +1,12 @@
 import { OpenAI } from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? '',
-});
+let _openai: OpenAI;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? '' });
+  }
+  return _openai;
+}
 
 export interface TranscribeOptions {
   filename?: string;
@@ -27,7 +31,7 @@ async function transcribe(
     type: options.mimeType ?? 'audio/mpeg',
   });
 
-  const transcription = await openai.audio.transcriptions.create({
+  const transcription = await getOpenAI().audio.transcriptions.create({
     file,
     model: 'whisper-1',
     language: options.language ?? undefined,

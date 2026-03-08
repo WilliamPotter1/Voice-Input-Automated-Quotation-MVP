@@ -1,9 +1,13 @@
 import { OpenAI } from 'openai';
 import type { QuoteItemInput } from '../schemas/quotes.js';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? '',
-});
+let _openai: OpenAI;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? '' });
+  }
+  return _openai;
+}
 
 const SYSTEM_PROMPT = `You are a quote extraction assistant. Given a transcription of someone describing products or services and their quantities and prices, extract a structured list of line items.
 
@@ -23,7 +27,7 @@ export async function extractQuoteItems(
     throw new Error('OPENAI_API_KEY is not set');
   }
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
