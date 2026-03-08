@@ -81,7 +81,12 @@ export async function buildApp(): Promise<FastifyInstance> {
     reply
       .code(isValidation && status === 500 ? 400 : status)
       .type('application/json')
-      .send({ error: message, requestId: req.id });
+      .send({
+        error: message,
+        // TODO: remove debug field once deployment is stable
+        debug: err.message,
+        requestId: req.id,
+      });
   });
 
   // ---- Routes --------------------------------------------------------------
