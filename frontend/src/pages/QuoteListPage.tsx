@@ -92,7 +92,7 @@ export function QuoteListPage() {
         {quotes.map((q) => (
           <li
             key={q.id}
-            className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:shadow-md"
+            className="group flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:shadow-md sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:p-5"
           >
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-slate-900">
@@ -100,7 +100,7 @@ export function QuoteListPage() {
               </p>
               <p className="mt-0.5 text-sm text-slate-500">{formatDate(q.createdAt)}</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-4 sm:justify-end">
               <span className="text-lg font-bold tabular-nums text-slate-900">
                 {formatMoney(q.total)}
               </span>

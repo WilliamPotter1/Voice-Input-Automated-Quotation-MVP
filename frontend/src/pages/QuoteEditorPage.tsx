@@ -135,7 +135,8 @@ export function QuoteEditorPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -147,7 +148,7 @@ export function QuoteEditorPage() {
             <ArrowLeft className="size-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               {isEdit ? t('editQuote') : t('newQuote')}
             </h1>
             <p className="text-sm text-slate-500">
@@ -159,7 +160,7 @@ export function QuoteEditorPage() {
           <button
             type="button"
             onClick={() => navigate('/quotes')}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:flex-none"
           >
             {t('cancel')}
           </button>
@@ -167,7 +168,7 @@ export function QuoteEditorPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60 sm:flex-none"
           >
             {saving ? (
               <>
@@ -181,8 +182,9 @@ export function QuoteEditorPage() {
         </div>
       </div>
 
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
-        <div className="grid gap-6 sm:grid-cols-2">
+      {/* Client & VAT */}
+      <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">{t('clientName')}</label>
             <input
@@ -210,9 +212,11 @@ export function QuoteEditorPage() {
         </div>
       </section>
 
+      {/* Line items — Desktop: table, Mobile: cards */}
       <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+        {/* Desktop table */}
+        <div className="hidden sm:block">
+          <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
                 <th className="px-4 py-3.5 font-semibold text-slate-700">{t('item')}</th>
@@ -265,7 +269,6 @@ export function QuoteEditorPage() {
                       type="button"
                       onClick={() => removeItem(item.id)}
                       className="flex size-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                      aria-label={t('addItem')}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -275,6 +278,67 @@ export function QuoteEditorPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile cards */}
+        <div className="divide-y divide-slate-100 sm:hidden">
+          {items.map((item, idx) => (
+            <div key={item.id} className="space-y-3 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  #{idx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.id)}
+                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={item.itemName}
+                onChange={(e) => updateItem(item.id, { itemName: e.target.value })}
+                placeholder={t('description')}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">{t('qty')}</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) =>
+                      updateItem(item.id, { quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })
+                    }
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">{t('unitPrice')}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={item.unitPrice || ''}
+                    onChange={(e) =>
+                      updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })
+                    }
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">{t('total')}</label>
+                  <div className="flex h-[38px] items-center rounded-lg bg-slate-50 px-3 text-sm font-semibold tabular-nums text-slate-700">
+                    {formatMoney(item.quantity * item.unitPrice)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="border-t border-slate-200 p-3">
           <button
             type="button"
@@ -287,8 +351,9 @@ export function QuoteEditorPage() {
         </div>
       </section>
 
+      {/* Totals */}
       <div className="flex justify-end">
-        <div className="w-full max-w-xs rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:w-auto sm:min-w-[280px] sm:p-6">
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-slate-600">
               <span>{t('subtotal')}</span>
