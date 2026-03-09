@@ -1,11 +1,17 @@
 import { Mic, Upload, Languages, Sparkles, Loader2 } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useMutation } from '@tanstack/react-query';
 import { transcribeAudio, extractQuoteItems } from '../api/client';
 import { useVoiceStore } from '../stores/voiceStore';
 import { useAuthStore } from '../stores/authStore';
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
 
 const LANGUAGES = [
   { code: 'de', label: 'German' },
@@ -21,8 +27,18 @@ const MAX_FILE_MB = 25;
 export function VoiceInputPage() {
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    if (!recording) {
+      setElapsed(0);
+      return;
+    }
+    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [recording]);
 
   const navigate = useNavigate();
   const { transcribedText, setTranscribedText, selectedLanguage, setSelectedLanguage } = useVoiceStore();
@@ -163,7 +179,7 @@ export function VoiceInputPage() {
             )}
             <Mic className="relative size-6 shrink-0" />
             <span className="relative">
-              {recording ? 'Stop recording' : 'Start recording'}
+              {recording ? `Stop recording · ${formatTime(elapsed)}` : 'Start recording'}
             </span>
           </button>
           <label className="flex flex-1 cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-5 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-50">
