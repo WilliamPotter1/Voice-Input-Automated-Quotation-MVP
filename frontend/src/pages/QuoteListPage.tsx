@@ -3,6 +3,7 @@ import { FileText, Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listQuotes, deleteQuote } from '../api/client';
+import { useTranslation } from '../i18n/useTranslation';
 
 function formatMoney(n: number): string {
   return new Intl.NumberFormat(undefined, {
@@ -20,6 +21,7 @@ function formatDate(iso: string): string {
 }
 
 export function QuoteListPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: quotes, isLoading } = useQuery({
     queryKey: ['quotes'],
@@ -29,7 +31,7 @@ export function QuoteListPage() {
     mutationFn: deleteQuote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast.success('Quote deleted');
+      toast.success(t('quoteDeleted'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -38,7 +40,7 @@ export function QuoteListPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
         <Loader2 className="size-10 animate-spin text-emerald-500" />
-        <p className="text-sm font-medium text-slate-600">Loading quotes…</p>
+        <p className="text-sm font-medium text-slate-600">{t('loadingQuotes')}</p>
       </div>
     );
   }
@@ -47,23 +49,21 @@ export function QuoteListPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">My quotes</h1>
-          <p className="mt-1 text-slate-600">Create and manage your quotes here.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('myQuotes')}</h1>
+          <p className="mt-1 text-slate-600">{t('manageQuotes')}</p>
         </div>
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 px-6 text-center">
           <div className="flex size-16 items-center justify-center rounded-2xl bg-slate-200/80 text-slate-500">
             <FileText className="size-8" />
           </div>
-          <h2 className="mt-4 text-lg font-semibold text-slate-800">No quotes yet</h2>
-          <p className="mt-2 max-w-sm text-sm text-slate-500">
-            Create a quote from voice input or start from scratch.
-          </p>
+          <h2 className="mt-4 text-lg font-semibold text-slate-800">{t('noQuotesYet')}</h2>
+          <p className="mt-2 max-w-sm text-sm text-slate-500">{t('noQuotesDesc')}</p>
           <Link
             to="/quotes/new"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700"
           >
             <Plus className="size-5" />
-            New quote
+            {t('newQuote')}
           </Link>
         </div>
       </div>
@@ -74,15 +74,17 @@ export function QuoteListPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">My quotes</h1>
-          <p className="mt-1 text-slate-600">{quotes.length} quote{quotes.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('myQuotes')}</h1>
+          <p className="mt-1 text-slate-600">
+            {quotes.length} {quotes.length !== 1 ? t('navQuotes').toLowerCase() : t('quote').toLowerCase()}
+          </p>
         </div>
         <Link
           to="/quotes/new"
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700 sm:w-auto"
         >
           <Plus className="size-5" />
-          New quote
+          {t('newQuote')}
         </Link>
       </div>
 
@@ -94,7 +96,7 @@ export function QuoteListPage() {
           >
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-slate-900">
-                {q.clientName || `Quote`}
+                {q.clientName || t('quote')}
               </p>
               <p className="mt-0.5 text-sm text-slate-500">{formatDate(q.createdAt)}</p>
             </div>
@@ -106,19 +108,19 @@ export function QuoteListPage() {
                 <Link
                   to={`/quotes/${q.id}`}
                   className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                  aria-label="Edit quote"
+                  aria-label={t('editQuote')}
                 >
                   <Pencil className="size-5" />
                 </Link>
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm('Delete this quote? This cannot be undone.')) {
+                    if (window.confirm(t('deleteConfirm'))) {
                       deleteMutation.mutate(q.id);
                     }
                   }}
                   className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-red-50 hover:text-red-600"
-                  aria-label="Delete quote"
+                  aria-label={t('quoteDeleted')}
                 >
                   <Trash2 className="size-5" />
                 </button>

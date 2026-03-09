@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { transcribeAudio, extractQuoteItems } from '../api/client';
 import { useVoiceStore } from '../stores/voiceStore';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from '../i18n/useTranslation';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -14,17 +15,18 @@ function formatTime(seconds: number): string {
 }
 
 const LANGUAGES = [
-  { code: 'de', label: 'German' },
+  { code: 'de', label: 'Deutsch' },
   { code: 'en', label: 'English' },
-  { code: 'it', label: 'Italian' },
-  { code: 'fr', label: 'French' },
-  { code: 'es', label: 'Spanish' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
 ] as const;
 
 const ALLOWED_ACCEPT = 'audio/mpeg,audio/mp3,audio/wav,audio/mp4,audio/x-m4a,audio/m4a,audio/webm';
 const MAX_FILE_MB = 25;
 
 export function VoiceInputPage() {
+  const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -49,12 +51,12 @@ export function VoiceInputPage() {
     onSuccess: (data) => {
       if (data.items.length > 0) {
         navigate('/quotes/new', { state: { extractedItems: data.items } });
-        toast.success('Quote items extracted — edit and save');
+        toast.success(t('itemsExtracted'));
       } else {
-        toast.error('No items could be extracted from the text');
+        toast.error(t('noItemsExtracted'));
       }
     },
-    onError: (e: Error) => toast.error(e.message || 'Extraction failed'),
+    onError: (e: Error) => toast.error(e.message || t('extracting')),
   });
 
   const transcribeMutation = useMutation({
@@ -62,10 +64,10 @@ export function VoiceInputPage() {
       transcribeAudio(file, { language }),
     onSuccess: (data) => {
       setTranscribedText(data.text);
-      toast.success('Transcription complete');
+      toast.success(t('transcriptionComplete'));
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Transcription failed');
+      toast.error(err.message || t('transcribing'));
     },
   });
 
@@ -79,7 +81,7 @@ export function VoiceInputPage() {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((tr) => tr.stop());
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
@@ -94,55 +96,53 @@ export function VoiceInputPage() {
       mediaRecorderRef.current = recorder;
       recorder.start();
       setRecording(true);
-      toast.success('Recording started');
+      toast.success(t('recordingStarted'));
     } catch {
-      toast.error('Microphone access denied or not available');
+      toast.error(t('micDenied'));
       setRecording(false);
     }
-  }, [selectedLanguage, transcribeMutation]);
+  }, [selectedLanguage, transcribeMutation, t]);
 
   const stopRecording = useCallback(() => {
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
     mediaRecorderRef.current.stop();
     mediaRecorderRef.current = null;
     setRecording(false);
-    toast('Processing recording…');
-  }, []);
+    toast(t('processingRecording'));
+  }, [t]);
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       if (file.size > MAX_FILE_MB * 1024 * 1024) {
-        toast.error(`File too large. Max ${MAX_FILE_MB} MB.`);
+        toast.error(t('fileTooLarge', { max: MAX_FILE_MB }));
         return;
       }
       transcribeMutation.mutate({ file, language: selectedLanguage });
       e.target.value = '';
     },
-    [selectedLanguage, transcribeMutation]
+    [selectedLanguage, transcribeMutation, t]
   );
 
   const isBusy = transcribeMutation.isPending || uploading;
 
   return (
     <div className="space-y-10">
-      {/* Hero */}
       <section className="text-center sm:text-left">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Turn voice into quotes
+          {t('heroTitle')}
         </h1>
         <p className="mt-2 max-w-xl text-slate-600">
-          Record or upload audio. We transcribe it and extract line items so you can edit and save a professional quote.
+          {t('heroDesc')}
         </p>
       </section>
 
-      {/* Language */}
       <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <Languages className="size-4 text-slate-500" />
-            Language
+            {t('language')}
           </span>
           <select
             value={selectedLanguage}
@@ -158,10 +158,9 @@ export function VoiceInputPage() {
         </div>
       </section>
 
-      {/* Record / Upload */}
       <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
-          Add audio
+          {t('addAudio')}
         </h2>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
           <button
@@ -179,12 +178,12 @@ export function VoiceInputPage() {
             )}
             <Mic className="relative size-6 shrink-0" />
             <span className="relative">
-              {recording ? `Stop recording · ${formatTime(elapsed)}` : 'Start recording'}
+              {recording ? `${t('stopRecording')} · ${formatTime(elapsed)}` : t('startRecording')}
             </span>
           </button>
           <label className="flex flex-1 cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-5 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-50">
             <Upload className="size-6 shrink-0 text-slate-500" />
-            Upload file
+            {t('uploadFile')}
             <input
               type="file"
               accept={ALLOWED_ACCEPT}
@@ -195,24 +194,22 @@ export function VoiceInputPage() {
           </label>
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          MP3, WAV, or M4A · max {MAX_FILE_MB} MB
+          {t('fileHint', { max: MAX_FILE_MB })}
         </p>
       </section>
 
-      {/* Loading state */}
       {isBusy && (
         <div className="flex items-center gap-3 rounded-2xl border border-emerald-200/80 bg-emerald-50/50 px-5 py-4">
           <Loader2 className="size-5 shrink-0 animate-spin text-emerald-600" />
-          <p className="text-sm font-medium text-emerald-800">Transcribing… This may take a few seconds.</p>
+          <p className="text-sm font-medium text-emerald-800">{t('transcribing')}</p>
         </div>
       )}
 
-      {/* Transcription + Extract */}
       {transcribedText !== null && transcribedText !== '' && !isBusy && (
         <section className="space-y-5">
           <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
-              Transcription
+              {t('transcription')}
             </h3>
             <p className="whitespace-pre-wrap rounded-xl bg-slate-50/80 p-4 text-slate-700">
               {transcribedText}
@@ -228,18 +225,18 @@ export function VoiceInputPage() {
               {extractMutation.isPending ? (
                 <>
                   <Loader2 className="size-5 animate-spin" />
-                  Extracting…
+                  {t('extracting')}
                 </>
               ) : (
                 <>
                   <Sparkles className="size-5" />
-                  Extract to quote
+                  {t('extractToQuote')}
                 </>
               )}
             </button>
           ) : (
             <p className="rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-600">
-              Sign in to create a quote from this transcription.
+              {t('signInToCreate')}
             </p>
           )}
         </section>

@@ -1,16 +1,18 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, Mic, FileText } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
-
-const navLinks = [
-  { to: '/', label: 'Voice', icon: Mic },
-  { to: '/quotes', label: 'Quotes', icon: FileText },
-];
+import { useTranslation } from '../i18n/useTranslation';
 
 export function Layout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
+
+  const navLinks = [
+    { to: '/', label: t('navVoice'), icon: Mic },
+    { to: '/quotes', label: t('navQuotes'), icon: FileText },
+  ];
 
   function handleLogout() {
     logout();
@@ -29,7 +31,7 @@ export function Layout() {
               <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500 text-white">
                 <Mic className="size-4" />
               </span>
-              Voice Quote
+              {t('appName')}
             </Link>
             {isAuthenticated() && (
               <nav className="flex gap-0.5" aria-label="Main">
@@ -63,10 +65,10 @@ export function Layout() {
                   type="button"
                   onClick={handleLogout}
                   className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                  aria-label="Sign out"
+                  aria-label={t('logOut')}
                 >
                   <LogOut className="size-4" />
-                  <span className="hidden sm:inline">Log out</span>
+                  <span className="hidden sm:inline">{t('logOut')}</span>
                 </button>
               </>
             ) : (
@@ -75,13 +77,13 @@ export function Layout() {
                   to="/login"
                   className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                 >
-                  Sign in
+                  {t('signIn')}
                 </Link>
                 <Link
                   to="/register"
                   className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
                 >
-                  Get started
+                  {t('getStarted')}
                 </Link>
               </>
             )}

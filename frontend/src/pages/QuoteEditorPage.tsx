@@ -10,6 +10,7 @@ import {
   type QuoteItemInput,
 } from '../api/client';
 import { useQuoteFormStore, useQuoteTotals } from '../stores/quoteFormStore';
+import { useTranslation } from '../i18n/useTranslation';
 
 const VAT_OPTIONS = [
   { value: 0, label: '0%' },
@@ -26,6 +27,7 @@ function formatMoney(n: number): string {
 }
 
 export function QuoteEditorPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ export function QuoteEditorPage() {
       createQuote(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast.success('Quote saved');
+      toast.success(t('quoteSaved'));
       reset();
       navigate('/quotes');
     },
@@ -97,7 +99,7 @@ export function QuoteEditorPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote', id] });
-      toast.success('Quote updated');
+      toast.success(t('quoteUpdated'));
       navigate('/quotes');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -127,30 +129,29 @@ export function QuoteEditorPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
         <Loader2 className="size-10 animate-spin text-emerald-500" />
-        <p className="text-sm font-medium text-slate-600">Loading quote…</p>
+        <p className="text-sm font-medium text-slate-600">{t('loadingQuotes')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate('/quotes')}
             className="flex size-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-            aria-label="Back to quotes"
+            aria-label={t('backToQuotes')}
           >
             <ArrowLeft className="size-5" />
           </button>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              {isEdit ? 'Edit quote' : 'New quote'}
+              {isEdit ? t('editQuote') : t('newQuote')}
             </h1>
             <p className="text-sm text-slate-500">
-              {isEdit ? 'Update items and totals' : 'Add client and line items'}
+              {isEdit ? t('updateItemsTotals') : t('addClientItems')}
             </p>
           </div>
         </div>
@@ -160,7 +161,7 @@ export function QuoteEditorPage() {
             onClick={() => navigate('/quotes')}
             className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             type="button"
@@ -171,30 +172,29 @@ export function QuoteEditorPage() {
             {saving ? (
               <>
                 <Loader2 className="size-5 animate-spin" />
-                Saving…
+                {t('saving')}
               </>
             ) : (
-              'Save quote'
+              t('saveQuote')
             )}
           </button>
         </div>
       </div>
 
-      {/* Client & VAT */}
       <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">Client name</label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">{t('clientName')}</label>
             <input
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              placeholder="e.g. Acme Corp"
+              placeholder={t('clientPlaceholder')}
               className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">VAT rate</label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">{t('vatRate')}</label>
             <select
               value={vatRate}
               onChange={(e) => setVatRate(Number(e.target.value))}
@@ -210,16 +210,15 @@ export function QuoteEditorPage() {
         </div>
       </section>
 
-      {/* Line items table */}
       <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="px-4 py-3.5 font-semibold text-slate-700">Item</th>
-                <th className="w-24 px-4 py-3.5 font-semibold text-slate-700">Qty</th>
-                <th className="w-32 px-4 py-3.5 font-semibold text-slate-700">Unit price</th>
-                <th className="w-32 px-4 py-3.5 font-semibold text-slate-700">Total</th>
+                <th className="px-4 py-3.5 font-semibold text-slate-700">{t('item')}</th>
+                <th className="w-24 px-4 py-3.5 font-semibold text-slate-700">{t('qty')}</th>
+                <th className="w-32 px-4 py-3.5 font-semibold text-slate-700">{t('unitPrice')}</th>
+                <th className="w-32 px-4 py-3.5 font-semibold text-slate-700">{t('total')}</th>
                 <th className="w-14 px-4 py-3.5" />
               </tr>
             </thead>
@@ -231,7 +230,7 @@ export function QuoteEditorPage() {
                       type="text"
                       value={item.itemName}
                       onChange={(e) => updateItem(item.id, { itemName: e.target.value })}
-                      placeholder="Description"
+                      placeholder={t('description')}
                       className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </td>
@@ -266,7 +265,7 @@ export function QuoteEditorPage() {
                       type="button"
                       onClick={() => removeItem(item.id)}
                       className="flex size-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                      aria-label="Remove row"
+                      aria-label={t('addItem')}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -283,25 +282,24 @@ export function QuoteEditorPage() {
             className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 sm:w-auto sm:px-6"
           >
             <Plus className="size-4" />
-            Add item
+            {t('addItem')}
           </button>
         </div>
       </section>
 
-      {/* Totals */}
       <div className="flex justify-end">
         <div className="w-full max-w-xs rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-slate-600">
-              <span>Subtotal</span>
+              <span>{t('subtotal')}</span>
               <span className="tabular-nums font-medium">{formatMoney(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-slate-600">
-              <span>VAT ({(vatRate * 100).toFixed(0)}%)</span>
+              <span>{t('vat')} ({(vatRate * 100).toFixed(0)}%)</span>
               <span className="tabular-nums font-medium">{formatMoney(vat)}</span>
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900">
-              <span>Total</span>
+              <span>{t('total')}</span>
               <span className="tabular-nums">{formatMoney(total)}</span>
             </div>
           </div>
